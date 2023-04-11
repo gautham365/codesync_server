@@ -3,6 +3,13 @@ package com.example.colabed.api.model;
 public class User
 {
     private Integer id;
+    /**
+     * String id;
+     * String accessToken
+     * String name;
+     * String photo;
+     *
+     */
     private String username;
 
     public User(Integer id, String username) {
