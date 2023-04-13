@@ -2,8 +2,10 @@ package com.example.colabed.service;
 
 import com.example.colabed.api.model.User;
 import com.example.colabed.api.model.Userrepository;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Service;
 
+import javax.management.Query;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,7 +42,7 @@ public class Userservice
 //        }
 //        return optional;
 //    }
-    public Optional<User> getUser(Integer id)
+    public Optional<User> getUser(String id)
     {
 
 
@@ -49,6 +51,22 @@ public class Userservice
     }
     public User newUser(User user)
     {
-        return repository.save(user);
+        User u=repository.findUserByEmailId(user.getEmail());
+        if(u!=null) {
+            u.setAccessToken(user.getAccessToken());
+            return repository.save(u);
+        }
+        else {
+            return repository.save(user);
+        }
+    }
+    public Optional<User> getUserByToken(String token)
+    {
+
+        Optional<User> user =Optional.ofNullable(repository.findUserByToken(token));
+
+
+        return user;
+        // return repository.findUserByToken(token);
     }
 }
