@@ -40,6 +40,7 @@ public class WebSocketConfig extends WebSocketServer{
                 .getResourceDescriptor()); //This method sends a message to all clients connected
         System.out.println(
                 conn.getRemoteSocketAddress().getAddress().getHostAddress() + " entered the room!");
+
     }
 
     @Override
