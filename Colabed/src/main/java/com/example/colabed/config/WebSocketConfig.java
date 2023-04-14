@@ -78,16 +78,16 @@ public class WebSocketConfig extends WebSocketServer{
         setConnectionLostTimeout(0);
         setConnectionLostTimeout(100);
     }
-    @PostConstruct
-    public void startWebSocketServer() {
-        int port = 8081; // 843 flash policy port
-        try {
-            WebSocketConfig s = new WebSocketConfig(port);
-            s.start();
-            System.out.println("WebSocketConfig started on port: " + s.getPort());
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        }
-    }
+//    @PostConstruct
+//    public void startWebSocketServer() {
+//        int port = 8081; // 843 flash policy port
+//        try {
+//            WebSocketConfig s = new WebSocketConfig(port);
+//            s.start();
+//            System.out.println("WebSocketConfig started on port: " + s.getPort());
+//        } catch (UnknownHostException e) {
+//            e.printStackTrace();
+//        }
+//    }
 }
 

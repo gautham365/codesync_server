@@ -1,6 +1,8 @@
 package com.example.colabed.config;
 
 import com.example.colabed.api.model.Message;
+import com.example.colabed.api.model.MessageDecoder;
+import com.example.colabed.api.model.MessageEncoder;
 
 
 import javax.websocket.*;
@@ -11,8 +13,9 @@ import java.util.HashMap;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-@ServerEndpoint(value = "/editor/{username}")
-public class WebSocketCon {
+@ServerEndpoint(value = "/editor/{username}",decoders = MessageDecoder.class,
+        encoders = MessageEncoder.class)
+public class WebSocketCon  {
     private Session session;
     private static Set<WebSocketCon> Websockets
             = new CopyOnWriteArraySet<>();
@@ -61,5 +64,7 @@ public class WebSocketCon {
                 }
             }
         });
+
     }
+
 }

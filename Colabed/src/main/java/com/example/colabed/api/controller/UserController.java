@@ -24,15 +24,16 @@ public class UserController
     private Userservice userservice;
     @Autowired
 
-    public UserController(Userservice userservice)
-    {
+    public UserController(Userservice userservice) {
+
         this.userservice=userservice;
+
     }
     @GetMapping("/")
-    public String getUser()
-    {
+    public String getUser() {
 
         return "Code Sync Server";
+
     }
 
 
