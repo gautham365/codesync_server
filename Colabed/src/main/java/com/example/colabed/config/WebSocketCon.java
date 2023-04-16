@@ -1,70 +1,59 @@
 package com.example.colabed.config;
 
-import com.example.colabed.api.model.Message;
-import com.example.colabed.api.model.MessageDecoder;
-import com.example.colabed.api.model.MessageEncoder;
+import com.corundumstudio.socketio.Configuration;
+import com.corundumstudio.socketio.SocketIOClient;
+import com.corundumstudio.socketio.SocketIOServer;
+import com.corundumstudio.socketio.listener.ConnectListener;
+import com.corundumstudio.socketio.listener.DisconnectListener;
+import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
 
+import javax.annotation.PreDestroy;
 
-import javax.websocket.*;
-import javax.websocket.server.PathParam;
-import javax.websocket.server.ServerEndpoint;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
+@CrossOrigin
+@Log4j2
+@ComponentScan
+@org.springframework.context.annotation.Configuration
 
-@ServerEndpoint(value = "/editor/{username}",decoders = MessageDecoder.class,
-        encoders = MessageEncoder.class)
-public class WebSocketCon  {
-    private Session session;
-    private static Set<WebSocketCon> Websockets
-            = new CopyOnWriteArraySet<>();
-    private static HashMap<String, String> users = new HashMap<>();
+public class WebSocketCon{
+    private String SOCKETHOST="localhost";
 
-    @OnOpen
-    public void onOpen(Session session,@PathParam("username") String username) throws IOException, EncodeException {
-        this.session = session;
-        Websockets.add(this);
-        users.put(session.getId(), username);
+    private int SOCKETPORT=8081;
+    private SocketIOServer server;
+    @Bean
+    public SocketIOServer socketIOServer()
+    {
+        Configuration config= new Configuration();
+        config.setHostname(SOCKETHOST);
+        config.setPort(SOCKETPORT);
+        server=new SocketIOServer(config);
+        server.start();
+        server.addConnectListener(new ConnectListener() {
+            @Override
+            public void onConnect(SocketIOClient client) {
+                log.info("new user  connected with socket"+client.getSessionId());
 
-        Message message = new Message();
-        message.setFrom(username);
-        message.setContent("Connected!");
-        broadcast(message);
-    }
-
-    @OnMessage
-    public void onMessage(Session session, Message message) throws IOException, EncodeException {
-        message.setFrom(users.get(session.getId()));
-        broadcast(message);
-    }
-
-    @OnClose
-    public void onClose(Session session) throws IOException, EncodeException {
-        Websockets.remove(this);
-        Message message = new Message();
-        message.setFrom(users.get(session.getId()));
-        message.setContent("Disconnected!");
-        broadcast(message);
-    }
-    @OnError
-    public void onError(Session session, Throwable throwable) {
-        // error handling here
-    }
-    private static void broadcast(Message message)
-            throws IOException, EncodeException {
-
-        Websockets.forEach(endpoint -> {
-            synchronized (endpoint) {
-                try {
-                    endpoint.session.getBasicRemote().
-                            sendObject(message);
-                } catch (IOException | EncodeException e) {
-                    e.printStackTrace();
-                }
             }
         });
+        server.addDisconnectListener(new DisconnectListener() {
+            @Override
+            public void onDisconnect(SocketIOClient client) {
+                client.getNamespace().getAllClients().stream().forEach(data->{
+                    log.info("user disconnected"+data.getSessionId().toString());
+                });
+            }
+        });
+        return server;
+    }
+    @PreDestroy
+    public void stopSocketIOServer() {
 
+        this.server.stop();
     }
 
 }

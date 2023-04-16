@@ -1,6 +1,8 @@
 package com.example.colabed.api.model;
 
+
 public class Message {
+
     private String from;
     private String to;
     private String content;
