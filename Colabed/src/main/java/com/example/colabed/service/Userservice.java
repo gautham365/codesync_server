@@ -54,11 +54,18 @@ public class Userservice
         User u=repository.findUserByEmailId(user.getEmail());
         if(u!=null) {
             u.setAccessToken(user.getAccessToken());
+            u.setSocketId(user.getSocketId());
             return repository.save(u);
         }
         else {
+
             return repository.save(user);
         }
+    }
+    public User updateUser(User user)
+    {
+
+        return repository.save(user);
     }
     public Optional<User> getUserByToken(String token)
     {

@@ -5,12 +5,13 @@ import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface Userrepository extends MongoRepository<User,String> {
-    @Query("{'accessToken': ?0}")
-    User findUserByToken(String token);
 
-    @Query("{'email': ?0}")
-    User findUserByEmailId(String email);
+public interface Roomrepository extends MongoRepository<Room,String> {
+//    @Query("{'roomCode': ?0}")
+//    Room findRoomByRoomCode(String roomCode);
+
+    @Query("{'roomName': ?0}")
+    Room findRoomByRoomName(String roomName);
 
 
 }
