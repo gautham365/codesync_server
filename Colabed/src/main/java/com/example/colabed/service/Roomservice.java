@@ -46,7 +46,40 @@ public class Roomservice {
         Room r = roomrepository.findRoomByRoomName(roomName);
         if(r!=null)
         {
-            return null;
+            if (r.getOwner().equals(email)) {
+                return null;
+            }
+            else
+            {
+                Cursors cursors = new Cursors();
+                cursors.python="0:0";
+                cursors.javascript="0:0";
+                cursors.cpp="0:0";
+
+                members.put(email,cursors);
+                String roomCode="";
+                StringBuilder builder = new StringBuilder();
+                final String ALPHA_NUMERIC_STRING = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+                while(true) {
+                    final SecureRandom secureRandom = new SecureRandom();
+
+                    for (int i = 0; i < 6; i++) {
+                        int randomIndex = secureRandom.nextInt(ALPHA_NUMERIC_STRING.length());
+                        char randomChar = ALPHA_NUMERIC_STRING.charAt(randomIndex);
+                        builder.append(randomChar);
+
+                    }
+                    roomCode = builder.toString();
+                    Optional<Room> room1= roomrepository.findById(roomCode);
+                    if (room1.isEmpty())
+                    {
+                        break;
+                    }
+                }
+                Room room= new Room(roomName,roomCode,defaultLanguage,null,email,members);
+                roomrepository.save(room);
+                return room;
+            }
         }
         else {
             Cursors cursors = new Cursors();
