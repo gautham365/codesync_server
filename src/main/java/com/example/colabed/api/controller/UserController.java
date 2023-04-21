@@ -1,24 +1,17 @@
 package com.example.colabed.api.controller;
 
 import com.example.colabed.api.model.*;
-import com.example.colabed.config.WebSocketCon;
-import com.example.colabed.config.WebSocketConfig;
 import com.example.colabed.service.Roomservice;
 import com.example.colabed.service.Userservice;
-import com.fasterxml.jackson.databind.util.JSONPObject;
-import org.apache.tomcat.util.json.JSONFilter;
-import org.bson.json.JsonObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Optional;
+
 
 @RestController
 @CrossOrigin
@@ -94,22 +87,26 @@ public class UserController
 
     }
     @PostMapping("/room/getDetails")
-    public ArrayList<String> rooms(@RequestBody  verToken verToken)
-    {
+    public ResponseEntity<ArrayList<pastRoom>> rooms(@RequestBody  verToken verToken) throws Exception {
         String token = verToken.token;
         Optional<User> user= userservice.getUserByToken(token);
+        ArrayList<pastRoom> data;
         if(user.isPresent())
         {
 
             User res=user.get();
-
-
-            return res.getPastRooms();
+            try{
+            data = userservice.getPastRoomsWithRoomNames(token);
+            }catch(Exception e){
+                System.out.println(e.getMessage());
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ArrayList<>());
+            }
         }
         else
         {
-            return null;
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ArrayList<>());
         }
+        return ResponseEntity.status(HttpStatus.OK).body(data);
     }
 
     @PostMapping("/room/join")
@@ -117,9 +114,9 @@ public class UserController
 
     {
         int k2=0;
-        String token= join.token;
+        String token= join.getToken();
 
-        String roomCode= join.roomCode;
+        String roomCode= join.getRoomCode();
         int k= roomservice.validRoomCode(roomCode);
         Optional<User> user= userservice.getUserByToken(token);
         if(user.isPresent())
