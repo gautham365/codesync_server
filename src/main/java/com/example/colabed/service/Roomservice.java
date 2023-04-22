@@ -43,10 +43,13 @@ public class Roomservice {
     public Room newRoom(String roomName, String defaultLanguage,String email)
     {
         Map<String,Cursors> members= new Hashtable<>();
-        Room r = roomrepository.findRoomByRoomName(roomName);
+
+        Room r = roomrepository.findRoomByRoomName(roomName,email);
         if(r!=null)
         {
+            System.out.println("hello");
             if (r.getOwner().equals(email)) {
+                System.out.println("room already exists");
                 return null;
             }
             else

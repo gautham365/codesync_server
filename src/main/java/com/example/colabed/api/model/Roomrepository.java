@@ -7,11 +7,11 @@ import org.springframework.stereotype.Repository;
 @Repository
 
 public interface Roomrepository extends MongoRepository<Room,String> {
-//    @Query("{'roomCode': ?0}")
-//    Room findRoomByRoomCode(String roomCode);
+    @Query("{'roomCode': ?0}")
+    Room findRoomByRoomCode(String roomCode);
 
-    @Query("{'roomName': ?0}")
-    Room findRoomByRoomName(String roomName);
+    @Query("{'roomName': ?0,'email': ?0}")
+    Room findRoomByRoomName(String roomName,String email);
 
 
 }
