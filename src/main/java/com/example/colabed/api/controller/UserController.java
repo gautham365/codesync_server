@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Optional;
@@ -66,17 +67,17 @@ public class UserController
     }
     @PostMapping("/verifyToken")
 
-    public ResponseEntity<User> verifyToken(@RequestBody  verToken entity)
+    public ResponseEntity<User> verifyToken(@RequestBody VerToken entity)
     {
         String token = entity.token;
-        System.out.println(entity);
-        System.out.println(token);
+//        System.out.println(entity);
+//        System.out.println(token);
         Optional<User> user= userservice.getUserByToken(token);
         if(user.isPresent())
         {
 
             User res=user.get();
-            User u = new User("",res.getEmail(),"", res.getName(), res.getPhoto(),"",null);
+            User u = new User("",res.getEmail().replaceAll("\\?","."),"", res.getName(), res.getPhoto(),"",null);
 //            return new HttpEntity<User>(u);
             return ResponseEntity.status(HttpStatus.OK).body(u);
         }
@@ -87,16 +88,16 @@ public class UserController
 
     }
     @PostMapping("/room/getDetails")
-    public ResponseEntity<ArrayList<pastRoom>> rooms(@RequestBody  verToken verToken) throws Exception {
+    public ResponseEntity<ArrayList<PastRoom>> rooms(@RequestBody VerToken verToken) throws Exception {
         String token = verToken.token;
         Optional<User> user= userservice.getUserByToken(token);
-        ArrayList<pastRoom> data;
+        ArrayList<PastRoom> data;
         if(user.isPresent())
         {
 
             User res=user.get();
             try{
-            data = userservice.getPastRoomsWithRoomNames(token);
+            data = roomservice.getPastRoomsWithRoomNames(token);
             }catch(Exception e){
                 System.out.println(e.getMessage());
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ArrayList<>());
@@ -110,27 +111,20 @@ public class UserController
     }
 
     @PostMapping("/room/join")
-    public ResponseEntity<JoinR> joinRoom (@RequestBody JoinR join)
-
-    {
+    public ResponseEntity<JoinResp> joinRoom (@RequestBody JoinResp join) throws NoSuchFieldException, IllegalAccessException {
         int k2=0;
-        String token= join.getToken();
+        String token= join.token;
 
-        String roomCode= join.getRoomCode();
+        String roomCode= join.roomCode;
         int k= roomservice.validRoomCode(roomCode);
         Optional<User> user= userservice.getUserByToken(token);
         if(user.isPresent())
         {
-
-
            k2=1;
-
-
         }
 
         if (k==1 && k2==1)
         {
-            System.out.println("hello");
             User u=user.get();
             ArrayList<String> a;
             if(u.getPastRooms()==null)
@@ -152,20 +146,40 @@ public class UserController
             cursors.javascript="0:0";
             cursors.cpp="0:0";
             Optional<Room> o=roomservice.findRoom(roomCode);
-            if (o.isPresent())
+            if (o.isEmpty())
             {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new JoinResp());
+            }
                 Room r=o.get();
                 members=r.getMembers();
                 String email=u.getEmail();
                 members.put(email,cursors);
                 r.setMembers(members);
                 Room room =roomservice.updateRoom(r);
-            }
+
+                int i=1;
+                ArrayList<ActiveUserData> data = new ArrayList<>();
+                for (String activeUser: members.keySet()){
+                    ActiveUserData aD = new ActiveUserData();
+
+                    Field field = Cursors.class.getDeclaredField(r.getDefaultLanguage());
+                    String[] parts = field.get(members.get(activeUser)).toString().split(":");
+
+                    aD.id = String.valueOf(i++);
+                    aD.lineNumber = Integer.parseInt(parts[0]);
+                    aD.column = Integer.parseInt(parts[1]);
+                    aD.email = activeUser.replaceAll("\\?",".");
+                    aD.name = u.getName();
+                    data.add(aD);
+                }
+                join.defaultLanguage=r.getDefaultLanguage();
+                join.activeUsers=data;
+                join.token="";
             return ResponseEntity.status(HttpStatus.OK).body(join);
         }
         else
         {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new JoinR());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new JoinResp());
         }
 
     }

@@ -1,12 +1,9 @@
 package com.example.colabed.service;
 
-import com.example.colabed.api.model.Cursors;
-import com.example.colabed.api.model.Room;
-import com.example.colabed.api.model.Roomrepository;
+import com.example.colabed.api.model.*;
 import org.springframework.stereotype.Service;
 
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
+import java.lang.reflect.Field;
 import java.security.SecureRandom;
 import java.util.*;
 
@@ -14,13 +11,16 @@ import java.util.*;
 
 public class Roomservice {
     private final Roomrepository roomrepository;
-    public Roomservice(Roomrepository roomrepository){this.roomrepository=roomrepository;}
+    private final Userservice userservice;
+    public Roomservice(Roomrepository roomrepository, Userservice userservice){
+        this.roomrepository=roomrepository;
+        this.userservice = userservice;
+    }
     public int validRoomCode(String roomCode)
     {
         Optional<Room> r=roomrepository.findById(roomCode);
         if (r.isPresent())
         {
-            System.out.println("hello");
             return 1;
         }
         else {
@@ -112,4 +112,106 @@ public class Roomservice {
             return room;
         }
     }
+
+    public ArrayList<PastRoom> getPastRoomsWithRoomNames(String token) throws Exception {
+        Optional<User> user = userservice.getUserByToken(token);
+
+        ArrayList<PastRoom> data = new ArrayList<>();
+        if (user.isEmpty()){
+            throw new Exception("User not available");
+        }
+        for (String roomCode : user.get().getPastRooms()) {
+            Optional<Room> room = findRoom(roomCode);
+            if (room.isEmpty()){
+                continue;
+            }
+            String roomName = room.get().getRoomName();
+            data.add(new PastRoom(roomCode,roomName));
+        }
+        return data;
+    }
+
+    public User addUserToRoom(String token, String roomCode) throws Exception {
+        Optional<User> user= userservice.getUserByToken(token);
+        if (user.isEmpty()){
+            throw new Exception("Unauthorised");
+        }
+        User u = user.get();
+        Map<String,Cursors> members;
+        Cursors cursors = new Cursors();
+        cursors.python="0:0";
+        cursors.javascript="0:0";
+        cursors.cpp="0:0";
+        Optional<Room> o=findRoom(roomCode);
+        if (o.isEmpty()){
+            throw new Exception("Invalid Room Code");
+        }
+        Room r=o.get();
+        members = r.getMembers();
+        if (members.containsKey(u.getEmail())){
+            return u;
+        }
+            String email=u.getEmail();
+            members.put(email,cursors);
+            r.setMembers(members);
+            Room room = updateRoom(r);
+
+            return u;
+    }
+
+    public void removeUserFromRoom(String token, String roomCode) throws Exception {
+        Optional<User> user= userservice.getUserByToken(token);
+        if (user.isEmpty()){
+            throw new Exception("Unauthorised");
+        }
+        User u = user.get();
+        Map<String,Cursors> members;
+        Cursors cursors = new Cursors();
+        cursors.python="0:0";
+        cursors.javascript="0:0";
+        cursors.cpp="0:0";
+        Optional<Room> o=findRoom(roomCode);
+        if (o.isEmpty()){
+            throw new Exception("Invalid Room Code");
+        }
+        Room r=o.get();
+        members = r.getMembers();
+        if (!members.containsKey(u.getEmail())){
+            return;
+        }
+        String email=u.getEmail();
+        members.remove(email);
+        r.setMembers(members);
+        Room room = updateRoom(r);
+    }
+
+    public User updateCursorOfUser(String roomCode, String language, String cursor, String token) throws Exception {
+        Optional<User> user= userservice.getUserByToken(token);
+        if (user.isEmpty()){
+            throw new Exception("Unauthorised");
+        }
+        User u = user.get();
+        Optional<Room> o=findRoom(roomCode);
+        if (o.isEmpty()){
+            throw new Exception("Invalid Room Code");
+        }
+        Room r=o.get();
+        Map<String,Cursors> members;
+        members = r.getMembers();
+        if (!members.containsKey(u.getEmail())){
+            return u;
+        }
+        String email=u.getEmail();
+        Cursors cursors = new Cursors();
+        cursors = members.get(email);
+
+        Field field = Cursors.class.getDeclaredField(language);
+        field.set(cursors, cursor);
+
+        members.put(email,cursors);
+        r.setMembers(members);
+        Room room = updateRoom(r);
+        return u;
+    }
+
 }

@@ -1,15 +1,10 @@
 package com.example.colabed.api.controller;
 
 import com.example.colabed.api.model.JoinR;
-import com.example.colabed.api.model.codeUpd;
-import com.example.colabed.api.model.curUpd;
 import com.example.colabed.service.Roomservice;
 import com.example.colabed.service.Userservice;
-import com.corundumstudio.socketio.AckRequest;
-import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.SocketIOServer;
 import com.corundumstudio.socketio.listener.DataListener;
-import com.example.colabed.api.model.Message;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
