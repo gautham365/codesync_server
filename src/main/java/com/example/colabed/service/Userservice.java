@@ -2,10 +2,8 @@ package com.example.colabed.service;
 
 import com.example.colabed.api.model.User;
 import com.example.colabed.api.model.Userrepository;
-import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Service;
 
-import javax.management.Query;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,6 +14,7 @@ public class Userservice
     private final Userrepository repository;
 
     public Userservice(Userrepository repository) {
+
         this.repository = repository;
     }
 
@@ -76,4 +75,17 @@ public class Userservice
         return user;
         // return repository.findUserByToken(token);
     }
+
+
+
+    public Optional<User> updateSocketId(String token, String sId) {
+        Optional<User> user = getUserByToken(token);
+        if (user.isPresent()){
+            User u = user.get();
+            u.setSocketId(sId);
+            updateUser(u);
+        }
+        return user;
+    }
+
 }
